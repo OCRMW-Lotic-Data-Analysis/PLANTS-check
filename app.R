@@ -1,21 +1,10 @@
-library(dplyr)
 library(bslib)
 library(shiny)
-library(readr)
-library(ggplot2)
-library(tidyr)
-library(purrr)
-library(stringr)
-library(ggiraph)
+library(dplyr)
 library(DT)
 library(leaflet)
 library(leaflet.extras)
 library(sf)
-library(shinyWidgets)
-library(rhandsontable)
-library(reactable)
-library(htmltools)
-library(zip)
 
 # Define UI --------------------------------------------------------------------
 ui <-  page_navbar(
