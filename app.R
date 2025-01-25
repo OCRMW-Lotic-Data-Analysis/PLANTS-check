@@ -1,0 +1,216 @@
+library(dplyr)
+library(bslib)
+library(shiny)
+library(readr)
+library(ggplot2)
+library(tidyr)
+library(purrr)
+library(stringr)
+library(ggiraph)
+library(DT)
+library(leaflet)
+library(leaflet.extras)
+library(sf)
+library(shinyWidgets)
+library(rhandsontable)
+library(reactable)
+library(htmltools)
+library(zip)
+
+# Define UI 
+ui <-  page_navbar(
+  title = "PLANT database check",
+  selected = "1. Upload raw data",
+  collapsible = TRUE,
+  theme = bslib::bs_theme(font_scale = NULL, preset = "yeti"),
+  
+  # Page 1- upload raw data
+  bslib::nav_panel( title = "1. Upload raw data",
+             page_sidebar(
+               
+               # Sidebar panel for inputs ----
+               sidebar = sidebar(
+                 
+                 # Input: Select a file ----
+                 fileInput(
+                   "speciesFile",
+                   "Choose Species File",
+                   multiple = TRUE,
+                   accept = c(
+                     "text/csv",
+                     "text/comma-separated-values,text/plain",
+                     ".csv"
+                   )
+                 ),
+                 
+                 # Input: Select a file ----
+                 fileInput(
+                   "plotLocations",
+                   "Choose Spatial File",
+                   multiple = TRUE,
+                   accept = c(
+                     "text/csv",
+                     "text/comma-separated-values,text/plain",
+                     ".csv"
+                   )
+                 ),
+                 
+                 # Horizontal line ----
+                 tags$hr(),
+                 
+                 # Input: Check box if file has header ----
+                 #checkboxInput("header", "Header", TRUE),
+                 
+                 
+                 # Input: Select project ----
+                 radioButtons(
+                   "project",
+                   "Project",
+                   choices = c(
+                     "Lotic" = "Lotic",
+                     "Terrestrial" = "Terrestrial",
+                     "R&W" = "R&W"
+                   ),
+                   selected = 'Lotic'
+                 ),
+                 
+                 # Horizontal line ----
+                 tags$hr(),
+                 
+              ),
+               
+               # Output: Data file ----
+              dataTableOutput("contents")
+               
+             ),
+  ),
+
+# Page 2- compare plant list with PLANTS database
+
+nav_panel(
+  title = "2. Compare",
+  
+  # Check box to filter out positive matches 
+  page_sidebar(
+    sidebar = sidebar(
+    #Sidebar
+      checkboxInput(
+          "false",
+    "False match only", TRUE
+  ),
+  
+  # Check box to filter out unknowns
+  checkboxInput(
+    "unk",
+    "Remove Unknowns", TRUE
+  ),
+  
+  # Filter tool to select one or more sites to observe
+  uiOutput('choose_site')
+),
+
+# Output: Data file ----
+tableOutput("siteTable")
+
+)
+)
+)
+
+# Define server logic to read selected file ----
+server <- function(input, output, session) {
+  
+  # Renders table on page 1----
+  output$contents <- renderDataTable({
+      req(input$speciesFile)
+    
+    df <- read.csv(
+      input$speciesFile$datapath,
+      #header = input$header
+    )
+    
+   
+  })
+  
+  
+  # R&W VERSION: Renders table on page 2----  
+  rw_checked_data <- reactive({
+    rw_check(input$speciesFile, input$plotLocations)
+    })
+  
+  
+
+  # Sidebar panel for reactive site filter ----
+  output$choose_site <- renderUI({
+    site.names <- as.vector( unique(rw_checked_data()$EvaluationID ))
+    selectInput(inputId = "selectPoint",
+                label ="Select point:",
+                choices=site.names, multiple=TRUE)
+    })
+ 
+  
+  # Actual site filter ----
+    model.data <- reactive({
+    subset(rw_checked_data(), EvaluationID %in% input$selectPoint)
+  })
+    
+    # Filter for TRUE or FALSE status ----
+    false.model.data <-reactive({
+
+     if(input$false==TRUE)
+     {subset(model.data(), status == 'FALSE')}
+     else(model.data())
+    })
+
+    # Filter for Unknowns included or not ----
+    unknown.false.model.data <-reactive({
+    
+    if(input$unk==TRUE)
+      { subset(false.model.data(),!grepl("[XXXX]", false.model.data()$PLANT_code) )
+        }
+      else(false.model.data())
+    })
+
+    # Render table after accounting for filters
+    output$siteTable <- renderTable({unknown.false.model.data() })
+}
+
+# #TERRESTRIAL CODE
+# 
+# # Load terrestrial file
+# species_richness_terrestrial <- read_csv("species_richness_terrestrial.csv")
+# 
+# # Grab necessary data, turn into long form (e.g., separate rows), then format X, Y to be spatial
+# species_sum<-species_richness_terrestrial %>%
+#   select(c(4,5,31,32,33)) %>%
+#   separate_rows(c(3))
+# species_coord<- species_sum %>%
+#   st_as_sf(coords = c("x", "y"), crs = 4326)
+# 
+# # Load counties
+# states <- counties(c("Montana","Idaho","NV", "North Dakota", "South Dakota"), cb = TRUE)
+# 
+# # Transform county data to be similar to site data
+# states$geometry<-st_transform(states$geometry, 4326)
+# 
+# # Same as above for R&W
+# intersect<-unlist(st_intersects(species_coord$geometry, states$geometry))
+# 
+# species_coord$county<-states[intersect,]$NAME
+# species_coord$state<-states[intersect,]$STATE_NAME
+# 
+# colnames(species_coord) <- c('Plot_ID',"Plot_Key","PLANT_code", "geometry", "county", "state")
+# 
+# sample_county<-unique(species_coord$county)
+# species_coord$present <-  species_coord %>%
+#   left_join(filter(NV_PLANT_sum, county==sample_county), join_by(PLANT_code), keep=TRUE) %>%
+#   select(PLANT_code.y) %>%
+#   st_drop_geometry() %>%
+#   unlist()
+# 
+# species_coord$status<- species_coord$present %in% species_coord$PLANT_code
+# # 
+
+
+
+# Create Shiny app ----
+shinyApp(ui, server)
