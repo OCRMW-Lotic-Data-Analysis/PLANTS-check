@@ -39,7 +39,7 @@ rw_check <- function(speciesFile, plotLocations){
   species_rw_sub<-species_rw %>% st_drop_geometry() 
   
   # Load our version of the PLANTS database. Remove Sci names because there are rendering issues due to odd symbols in some of the sci names. 
-  NV_PLANT_sum<- read.csv("./NV_PLANT_sum.csv")
+  NV_PLANT_sum<- read.csv("./appData/NV_PLANT_sum.csv")
   NV_PLANT_sum <- NV_PLANT_sum %>% select(-sci_name)
   
   # Load county data for the states of interest. 

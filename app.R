@@ -17,129 +17,94 @@ library(reactable)
 library(htmltools)
 library(zip)
 
-# Define UI 
+# Define UI --------------------------------------------------------------------
 ui <-  page_navbar(
   title = "PLANT database check",
   selected = "1. Upload raw data",
   collapsible = TRUE,
   theme = bslib::bs_theme(font_scale = NULL, preset = "yeti"),
   
-  # Page 1- upload raw data
-  bslib::nav_panel( title = "1. Upload raw data",
-             page_sidebar(
-               
-               # Sidebar panel for inputs ----
-               sidebar = sidebar(
-                 
-                 # Input: Select a file ----
-                 fileInput(
-                   "speciesFile",
-                   "Choose Species File",
-                   multiple = TRUE,
-                   accept = c(
-                     "text/csv",
-                     "text/comma-separated-values,text/plain",
-                     ".csv"
-                   )
-                 ),
-                 
-                 # Input: Select a file ----
-                 fileInput(
-                   "plotLocations",
-                   "Choose Spatial File",
-                   multiple = TRUE,
-                   accept = c(
-                     "text/csv",
-                     "text/comma-separated-values,text/plain",
-                     ".csv"
-                   )
-                 ),
-                 
-                 # Horizontal line ----
-                 tags$hr(),
-                 
-                 # Input: Check box if file has header ----
-                 #checkboxInput("header", "Header", TRUE),
-                 
-                 
-                 # Input: Select project ----
-                 radioButtons(
-                   "project",
-                   "Project",
-                   choices = c(
-                     "Lotic" = "Lotic",
-                     "Terrestrial" = "Terrestrial",
-                     "R&W" = "R&W"
-                   ),
-                   selected = 'Lotic'
-                 ),
-                 
-                 # Horizontal line ----
-                 tags$hr(),
-                 
-              ),
-               
-               # Output: Data file ----
+  # Page 1 - upload raw data
+  nav_panel(title = "1. Upload raw data",
+            page_sidebar(
+              # Sidebar
+              sidebar = sidebar(
+                fileInput(
+                  "speciesFile",
+                  "Choose Species File",
+                  multiple = TRUE,
+                  accept = c(
+                    "text/csv",
+                    "text/comma-separated-values,text/plain",
+                    ".csv"
+                    )
+                  ),
+                fileInput(
+                  "plotLocations",
+                  "Choose Spatial File",
+                  multiple = TRUE,
+                  accept = c(
+                    "text/csv",
+                    "text/comma-separated-values,text/plain",
+                    ".csv"
+                    )
+                  ),
+                tags$hr(),
+                radioButtons("project", "Project",
+                             choices = c(
+                               "Lotic" = "Lotic",
+                               "Terrestrial" = "Terrestrial",
+                               "R&W" = "R&W"
+                               ),
+                             selected = 'Lotic'
+                             ),
+                tags$hr(),
+               ),
+              # Main page
               dataTableOutput("contents")
-               
              ),
-  ),
-
-# Page 2- compare plant list with PLANTS database
-
-nav_panel(
-  title = "2. Compare",
+            ),
   
-  # Check box to filter out positive matches 
-  page_sidebar(
-    sidebar = sidebar(
-    #Sidebar
-      checkboxInput(
+  # Page 2 - compare plant list with PLANTS database
+  nav_panel(
+    title = "2. Compare",
+    # Check box to filter out positive matches 
+    page_sidebar(
+      # Sidebar
+      sidebar = sidebar(
+        checkboxInput(
           "false",
-    "False match only", TRUE
-  ),
-  
-  # Check box to filter out unknowns
-  checkboxInput(
-    "unk",
-    "Remove Unknowns", TRUE
-  ),
-  
-  # Filter tool to select one or more sites to observe
-  uiOutput('choose_site')
-),
+          "False match only", TRUE
+          ),
+        # Check box to filter out unknowns
+        checkboxInput(
+          "unk",
+          "Remove Unknowns", TRUE
+          ),
+        # Filter tool to select one or more sites to observe
+        uiOutput('choose_site')
+        ),
+      # Main Page
+      tableOutput("siteTable")
+      )
+    )
+  )
 
-# Output: Data file ----
-tableOutput("siteTable")
-
-)
-)
-)
-
-# Define server logic to read selected file ----
+# Define server ----------------------------------------------------------------
 server <- function(input, output, session) {
   
-  # Renders table on page 1----
+  # Renders table on page 1
   output$contents <- renderDataTable({
-      req(input$speciesFile)
-    
-    df <- read.csv(
-      input$speciesFile$datapath,
-      #header = input$header
-    )
-    
-   
+    req(input$speciesFile)
+    df <- read.csv(input$speciesFile$datapath)
   })
   
-  
-  # R&W VERSION: Renders table on page 2----  
+  # R&W VERSION: Renders table on page 2  
   rw_checked_data <- reactive({
     rw_check(input$speciesFile, input$plotLocations)
     })
-  
-  
-
-  # Sidebar panel for reactive site filter ----
+ 
+  # Sidebar panel for reactive site filter 
   output$choose_site <- renderUI({
     site.names <- as.vector( unique(rw_checked_data()$EvaluationID ))
     selectInput(inputId = "selectPoint",
@@ -148,26 +113,29 @@ server <- function(input, output, session) {
     })
  
   
-  # Actual site filter ----
-    model.data <- reactive({
+  # Actual site filter 
+  model.data <- reactive({
     subset(rw_checked_data(), EvaluationID %in% input$selectPoint)
-  })
+    })
     
-    # Filter for TRUE or FALSE status ----
-    false.model.data <-reactive({
-
-     if(input$false==TRUE)
-     {subset(model.data(), status == 'FALSE')}
-     else(model.data())
+  # Filter for TRUE or FALSE status
+  false.model.data <-reactive({
+  if (input$false==TRUE) {
+    subset(model.data(), status == 'FALSE')
+    }
+    else {
+      model.data()
+      }
     })
 
-    # Filter for Unknowns included or not ----
-    unknown.false.model.data <-reactive({
-    
-    if(input$unk==TRUE)
-      { subset(false.model.data(),!grepl("[XXXX]", false.model.data()$PLANT_code) )
-        }
-      else(false.model.data())
+  # Filter for Unknowns included or not
+  unknown.false.model.data <-reactive({
+  if (input$unk==TRUE) {
+    subset(false.model.data(),!grepl("[XXXX]", false.model.data()$PLANT_code))
+    }
+    else {
+      false.model.data()
+      }
     })
 
     # Render table after accounting for filters
@@ -209,8 +177,6 @@ server <- function(input, output, session) {
 # 
 # species_coord$status<- species_coord$present %in% species_coord$PLANT_code
 # # 
-
-
 
 # Create Shiny app ----
 shinyApp(ui, server)
