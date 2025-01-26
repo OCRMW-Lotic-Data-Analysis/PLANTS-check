@@ -28,7 +28,7 @@ plant_check_map_proxy_rw <- function(mapId, data){
   
   leafletProxy(mapId, data = data) %>%
     clearMarkers() %>%
-    addCircleMarkers(data = dat,
+    addCircleMarkers(data = data,
                      radius = 4,
                      color = "white",
                      fillColor = "blue",
