@@ -35,7 +35,7 @@ plant_check_map_proxy_rw <- function(mapId, data){
                      stroke = TRUE,
                      weight = 1,
                      fillOpacity = 1,
-                     label = ~EvaluationID
+                     label = ~PlotID
     )
 }
 

@@ -20,6 +20,11 @@ ui <-  page_navbar(
             page_sidebar(
               # Sidebar
               sidebar = sidebar(
+                radioButtons("workingState", "State",
+                             choices = c(
+                               "NV" = "NV",
+                               "ID" = "ID"
+                             )),
                 fileInput(
                   "speciesFile",
                   "Choose Species File",
@@ -30,26 +35,17 @@ ui <-  page_navbar(
                     ".csv"
                     )
                   ),
-                fileInput(
-                  "plotLocations",
-                  "Choose Spatial File",
-                  multiple = TRUE,
-                  accept = c(
-                    "text/csv",
-                    "text/comma-separated-values,text/plain",
-                    ".csv"
-                    )
-                  ),
                 tags$hr(),
-                radioButtons("project", "Project",
-                             choices = c(
-                               "Lotic" = "Lotic",
-                               "Terrestrial" = "Terrestrial",
-                               "R&W" = "R&W"
-                               ),
-                             selected = 'Lotic'
-                             ),
-                tags$hr(),
+                h5("Data Type:")
+                # radioButtons("project", "Project",
+                #              choices = c(
+                #                "Lotic" = "Lotic",
+                #                "Terrestrial" = "Terrestrial",
+                #                "R&W" = "R&W"
+                #                ),
+                #              selected = 'Lotic'
+                #              ),
+                
                ),
               # Main page
               #dataTableOutput("contents"),
@@ -88,7 +84,7 @@ server <- function(input, output, session) {
   
   ## Global --------------------------------------------------------------------
   # Load counties shapefile
-  counties_shp <- st_read("./appData/counties.shp", quiet = TRUE) %>%
+  counties_gpkg <- st_read("./appData/counties.gpkg", quiet = TRUE) %>%
     st_transform(crs = 4326)
   
   ## Page 1 --------------------------------------------------------------------
@@ -111,15 +107,15 @@ server <- function(input, output, session) {
   # R&W VERSION: Renders table on page 2  
   rw_checked_data <- reactive({
     req(input$speciesFile)
-    req(input$plotLocations)
     rw_check(speciesFile = input$speciesFile$datapath, 
-             plotLocations = input$plotLocations$datapath, 
-             counties = counties_shp)
+             plotLocations = "appData/R&WAIM_2024_Plots_0.csv", 
+             counties = counties_gpkg,
+             stateAbbrv = input$workingState)
     })
  
   # Sidebar panel for reactive site filter 
   output$choose_site <- renderUI({
-    site.names <- as.vector( unique(rw_checked_data()$EvaluationID ))
+    site.names <- as.vector( unique(rw_checked_data()$PlotID ))
     selectInput(inputId = "selectPoint",
                 label ="Select point:",
                 choices=site.names, multiple=TRUE)
@@ -128,7 +124,7 @@ server <- function(input, output, session) {
   
   # Actual site filter 
   model.data <- reactive({
-    subset(rw_checked_data(), EvaluationID %in% input$selectPoint)
+    subset(rw_checked_data(), PlotID %in% input$selectPoint)
     })
     
   # Filter for TRUE or FALSE status
@@ -157,13 +153,13 @@ server <- function(input, output, session) {
       req(unknown.false.model.data())
       tableDat <- unknown.false.model.data() %>% 
         st_drop_geometry() %>% 
-        select(!c(present, PlotID, state_full))
+        select(!c(present, state_full))
       reactable(tableDat,
                 pagination = FALSE, 
                 highlight = TRUE, 
                 compact = TRUE,
                 fullWidth = FALSE,
-                groupBy = "EvaluationID",
+                groupBy = "PlotID",
                 columns = dynamicColWidths(tableDat))
                 })
     
