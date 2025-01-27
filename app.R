@@ -2,11 +2,14 @@ library(bslib)
 library(shiny)
 library(dplyr)
 library(readr)
+library(tidyr)
+library(stringr)
 library(purrr)
 library(DT)
 library(reactable)
 library(leaflet)
 library(sf)
+library(readxl)
 
 # Define UI --------------------------------------------------------------------
 ui <-  page_navbar(
@@ -86,13 +89,14 @@ server <- function(input, output, session) {
   # Load counties shapefile
   counties_gpkg <- st_read("./appData/counties.gpkg", quiet = TRUE) %>%
     st_transform(crs = 4326)
+  all_states_plant_db <- read.csv("./appData/NV_PLANT_sum.csv") %>% select(-sci_name)
   
   ## Page 1 --------------------------------------------------------------------
   # Renders table on page 1
-  output$contents <- renderDataTable({
-    req(input$speciesFile)
-    df <- read.csv(input$speciesFile$datapath)
-  })
+  # output$contents <- renderDataTable({
+  #   req(input$speciesFile)
+  #   df <- read.csv(input$speciesFile$datapath)
+  # })
   
   # Map to show points - just basemap here
    output$plant_map <- renderLeaflet({
@@ -100,22 +104,55 @@ server <- function(input, output, session) {
    })
    
    # Add points to map once data is uploaded.
-   observeEvent(rw_checked_data(),{
-     plant_check_map_proxy_rw(mapId = "plant_map", data = rw_checked_data())
+   observeEvent(checked_data(),{
+     plant_check_map_proxy_rw(mapId = "plant_map", data = checked_data())
    })
   
-  # R&W VERSION: Renders table on page 2  
-  rw_checked_data <- reactive({
+  # # R&W VERSION: Renders table on page 2  
+  # checked_data <- reactive({
+  #   req(input$speciesFile)
+  #   fileType <- read.csv(input$speciesFile$datapath)
+  #   rw_check(speciesFile = input$speciesFile$datapath, 
+  #            plotLocations = "appData/R&WAIM_2024_Plots_0.csv", 
+  #            counties = counties_gpkg,
+  #            plantDB = all_states_plant_db,
+  #            stateAbbrv = input$workingState)
+  #   })
+  # 
+  
+
+  
+  # # R&W VERSION: Renders table on page 2  
+  checked_data <- reactive({
     req(input$speciesFile)
-    rw_check(speciesFile = input$speciesFile$datapath, 
-             plotLocations = "appData/R&WAIM_2024_Plots_0.csv", 
-             counties = counties_gpkg,
-             stateAbbrv = input$workingState)
-    })
- 
+    
+    # Get header for uploaded data.  This will be used to identify the filetype
+    headers <- readLines(input$speciesFile$datapath, n = 1)
+
+    # R&W
+    if (str_detect(headers, pattern = "SpecRichDetailEvaluationID")) {
+      rw_check(speciesFile = input$speciesFile$datapath,
+               plotLocations = "appData/R&WAIM_2024_Plots_0.csv",
+               counties = counties_gpkg,
+               plantDB = all_states_plant_db,
+               stateAbbrv = input$workingState)
+    # Terrestrial
+    } else if (str_detect(headers, pattern = "Plot ID")) {
+      print("terr")
+    # Lotic
+    } else if (tools::file_ext(input$speciesFile$datapath) == "xlsm") {
+      
+      print("lotic")
+    }
+  })
+
+  
+  
+  
+  
   # Sidebar panel for reactive site filter 
   output$choose_site <- renderUI({
-    site.names <- as.vector( unique(rw_checked_data()$PlotID ))
+    site.names <- as.vector( unique(checked_data()$PlotID ))
     selectInput(inputId = "selectPoint",
                 label ="Select point:",
                 choices=site.names, multiple=TRUE)
@@ -124,7 +161,7 @@ server <- function(input, output, session) {
   
   # Actual site filter 
   model.data <- reactive({
-    subset(rw_checked_data(), PlotID %in% input$selectPoint)
+    subset(checked_data(), PlotID %in% input$selectPoint)
     })
     
   # Filter for TRUE or FALSE status
