@@ -18,7 +18,7 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbrv){
     select(PlotID,AdminState, x, y) %>%
     distinct()
   
-  # Join spatial data and species richness data by evaluationID. There are many coordinates with R&W data so this just grabs the first match.
+  # Join spatial data and species richness data by PlotID There are many coordinates with R&W data so this just grabs the first match.
   #NOTE: currently filter to NV but that will need to be updated with the radio button we talked about to filter by state.
   species_sum <- species_richness_dat %>%
     left_join(species_richness_spatial, join_by(PlotID),multiple='first') %>%

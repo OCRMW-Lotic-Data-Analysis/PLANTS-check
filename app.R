@@ -84,73 +84,61 @@ ui <-  page_navbar(
 
 # Define server ----------------------------------------------------------------
 server <- function(input, output, session) {
+
   
   ## Global --------------------------------------------------------------------
+  # Allow uploads up to 200MB. Only useful for many MIM files.
+  options(shiny.maxRequestSize = 200*1024^2)
+  
   # Load counties shapefile
   counties_gpkg <- st_read("./appData/counties.gpkg", quiet = TRUE) %>%
     st_transform(crs = 4326)
   all_states_plant_db <- read.csv("./appData/NV_PLANT_sum.csv") %>% select(-sci_name)
   
   ## Page 1 --------------------------------------------------------------------
-  # Renders table on page 1
-  # output$contents <- renderDataTable({
-  #   req(input$speciesFile)
-  #   df <- read.csv(input$speciesFile$datapath)
-  # })
   
-  # Map to show points - just basemap here
-   output$plant_map <- renderLeaflet({
-     plant_check_map()
-   })
-   
-   # Add points to map once data is uploaded.
-   observeEvent(checked_data(),{
-     plant_check_map_proxy_rw(mapId = "plant_map", data = checked_data())
-   })
+  fileType <- reactive({
+    identifyFileType(input$speciesFile$datapath)})
   
-  # # R&W VERSION: Renders table on page 2  
-  # checked_data <- reactive({
-  #   req(input$speciesFile)
-  #   fileType <- read.csv(input$speciesFile$datapath)
-  #   rw_check(speciesFile = input$speciesFile$datapath, 
-  #            plotLocations = "appData/R&WAIM_2024_Plots_0.csv", 
-  #            counties = counties_gpkg,
-  #            plantDB = all_states_plant_db,
-  #            stateAbbrv = input$workingState)
-  #   })
-  # 
-  
-
-  
-  # # R&W VERSION: Renders table on page 2  
+  # Run check on uploaded data
   checked_data <- reactive({
     req(input$speciesFile)
+
+    # fileType <- identifyFileType(input$speciesFile$datapath)
+    # print(fileType)
+ 
+    chkdat <- switch(fileType(),
+                     rw = rw_check(speciesFile = input$speciesFile$datapath,
+                                   plotLocations = "./appData/R&WAIM_2024_Plots_0.csv",
+                                   counties = counties_gpkg,
+                                   plantDB = all_states_plant_db,
+                                   stateAbbrv = input$workingState),
+                     terrestrial = "terr",
+                     lotic = lotic_check(speciesFile = map_dfr(input$speciesFile$datapath, get_single_MIM_data),
+                                         plotLocations = "./appData/LoticAIM_2024_Points.csv",
+                                         counties = counties_gpkg,
+                                         plantDB = all_states_plant_db,
+                                         stateAbbrv = input$workingState)
+                     )
     
-    # Get header for uploaded data.  This will be used to identify the filetype
-    headers <- readLines(input$speciesFile$datapath, n = 1)
-
-    # R&W
-    if (str_detect(headers, pattern = "SpecRichDetailEvaluationID")) {
-      rw_check(speciesFile = input$speciesFile$datapath,
-               plotLocations = "appData/R&WAIM_2024_Plots_0.csv",
-               counties = counties_gpkg,
-               plantDB = all_states_plant_db,
-               stateAbbrv = input$workingState)
-    # Terrestrial
-    } else if (str_detect(headers, pattern = "Plot ID")) {
-      print("terr")
-    # Lotic
-    } else if (tools::file_ext(input$speciesFile$datapath) == "xlsm") {
-      
-      print("lotic")
-    }
+    chkdat
   })
-
   
+  # Map to show points - just basemap here
+  output$plant_map <- renderLeaflet({
+    plant_check_map()
+  })
   
+  # Add points to map once data is uploaded.
+  observeEvent(checked_data(),{
+    switch(fileType(),
+           rw = plant_check_map_proxy_rw(mapId = "plant_map", data = checked_data()),
+           lotic = plant_check_map_proxy_lotic(mapId = "plant_map", data = checked_data()))
+    #plant_check_map_proxy_rw(mapId = "plant_map", data = checked_data())
+  })
   
-  
-  # Sidebar panel for reactive site filter 
+  ## Page 1 --------------------------------------------------------------------
+  # Sidebar panel for site filter 
   output$choose_site <- renderUI({
     site.names <- as.vector( unique(checked_data()$PlotID ))
     selectInput(inputId = "selectPoint",
@@ -186,20 +174,43 @@ server <- function(input, output, session) {
 
     # Render table after accounting for filters
     #output$siteTable <- renderDataTable({unknown.false.model.data() })
-    output$checkTable <- renderReactable({
-      req(unknown.false.model.data())
-      tableDat <- unknown.false.model.data() %>% 
-        st_drop_geometry() %>% 
-        select(!c(present, state_full))
-      reactable(tableDat,
-                pagination = FALSE, 
-                highlight = TRUE, 
-                compact = TRUE,
-                fullWidth = FALSE,
-                groupBy = "PlotID",
-                columns = dynamicColWidths(tableDat))
-                })
+    # output$checkTable <- renderReactable({
+    #   req(unknown.false.model.data())
+    #   tableDat <- unknown.false.model.data() %>% 
+    #     st_drop_geometry() %>% 
+    #     select(!c(present, state_full))
+    #   reactable(tableDat,
+    #             pagination = FALSE, 
+    #             highlight = TRUE, 
+    #             compact = TRUE,
+    #             fullWidth = FALSE,
+    #             #groupBy = "PlotID",
+    #             groupBy = switch(fileType(),
+    #                    rw = "PlotID",
+    #                    lotic= "PointID"),
+    #             columns = dynamicColWidths(tableDat))
+    #             })
     
+  # DOESNT ACCOUNT FOR FILTERS YET
+  output$checkTable <- renderReactable({
+    req(checked_data())
+    tableDat <- checked_data() %>% 
+      st_drop_geometry() %>% 
+      select(!c(present, state_full))
+    reactable(tableDat,
+              pagination = FALSE, 
+              highlight = TRUE, 
+              compact = TRUE,
+              fullWidth = FALSE,
+              #groupBy = "PlotID",
+              groupBy = switch(fileType(),
+                               rw = "PlotID",
+                               lotic= "PointID"),
+              columns = dynamicColWidths(tableDat))
+  })
+  
+  
+  
 } # end server
 
 
