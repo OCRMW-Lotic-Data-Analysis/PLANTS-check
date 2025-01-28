@@ -12,7 +12,10 @@
 get_single_MIM_data <- function(filePath) {
 
   PointID <- read_excel(filePath, sheet = 'Header', range = 'A10', col_names = FALSE, .name_repair = "unique_quiet")[[1]]
-  speciesCode <- read_excel(filePath, sheet = 'DMA', range = 'B5:B502', col_names = FALSE, .name_repair = "unique_quiet")[[1]] %>% na.omit() %>% as.character()
+  speciesCode <- read_excel(filePath, sheet = 'DMA', range = 'B5:B502', col_names = FALSE, .name_repair = "unique_quiet")[[1]] %>% 
+    na.omit() %>% 
+    as.character() %>%
+    toupper()
 
   df <- data.frame(PointID, speciesCode)
 }

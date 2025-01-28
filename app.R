@@ -10,6 +10,7 @@ library(reactable)
 library(leaflet)
 library(sf)
 library(readxl)
+library(shinyWidgets)
 
 # Define UI --------------------------------------------------------------------
 ui <-  page_navbar(
@@ -35,7 +36,8 @@ ui <-  page_navbar(
                   accept = c(
                     "text/csv",
                     "text/comma-separated-values,text/plain",
-                    ".csv"
+                    ".csv",
+                    ".xlsm"
                     )
                   ),
                 tags$hr(),
@@ -73,7 +75,12 @@ ui <-  page_navbar(
           "Remove Unknowns", TRUE
           ),
         # Filter tool to select one or more sites to observe
-        uiOutput('choose_site')
+        pickerInput(inputId = "point_picker",
+                    label = "Select point(s):",
+                    choices = NULL,
+                    selected = NULL,
+                    multiple = TRUE,
+                    options = pickerOptions(actionsBox = TRUE))
         ),
       # Main Page
       #dataTableOutput("siteTable")
@@ -137,41 +144,38 @@ server <- function(input, output, session) {
     #plant_check_map_proxy_rw(mapId = "plant_map", data = checked_data())
   })
   
-  ## Page 1 --------------------------------------------------------------------
-  # Sidebar panel for site filter 
-  output$choose_site <- renderUI({
-    site.names <- as.vector( unique(checked_data()$PlotID ))
-    selectInput(inputId = "selectPoint",
-                label ="Select point:",
-                choices=site.names, multiple=TRUE)
-    })
- 
+  ## Page 2 --------------------------------------------------------------------
+  # Sidebar panel for site filter
   
-  # Actual site filter 
-  model.data <- reactive({
-    subset(checked_data(), PlotID %in% input$selectPoint)
+  # Update picker input based on available data.
+  observe({
+    updatePickerInput(
+      session = session,
+      inputId = "point_picker",
+      choices = as.vector(unique(checked_data()$PlotID)) %>% sort(), # "" to force blank entry in dropdown
+      selected = NULL)
     })
+
+  
+  checked_data_filtered <- reactive({
+    filtered_data <- checked_data()
     
-  # Filter for TRUE or FALSE status
-  false.model.data <-reactive({
-  if (input$false==TRUE) {
-    subset(model.data(), status == 'FALSE')
+    # Pickerinput 
+    filtered_data <- subset(filtered_data, PlotID %in% input$point_picker)
+    
+    # Include "False" matches only.  False = is NOT found in county, TRUE = is found in county.
+    if (input$false==TRUE) {
+      filtered_data <- subset(filtered_data, status == 'FALSE')
     }
-    else {
-      model.data()
-      }
-    })
-
-  # Filter for Unknowns included or not
-  unknown.false.model.data <-reactive({
-  if (input$unk==TRUE) {
-    subset(false.model.data(),!grepl("[XXXX]", false.model.data()$PLANT_code))
+    
+    # Include Unknown plants or not
+    if (input$unk==TRUE) {
+      filtered_data <- subset(filtered_data,!grepl("[XXXX]", filtered_data$PLANT_code))
     }
-    else {
-      false.model.data()
-      }
-    })
-
+    
+    filtered_data
+  })
+  
     # Render table after accounting for filters
     #output$siteTable <- renderDataTable({unknown.false.model.data() })
     # output$checkTable <- renderReactable({
@@ -193,8 +197,8 @@ server <- function(input, output, session) {
     
   # DOESNT ACCOUNT FOR FILTERS YET
   output$checkTable <- renderReactable({
-    req(checked_data())
-    tableDat <- checked_data() %>% 
+    req(nrow(checked_data_filtered()) > 0)
+    tableDat <- checked_data_filtered() %>% 
       st_drop_geometry() %>% 
       select(!c(present, state_full))
     reactable(tableDat,
@@ -202,6 +206,7 @@ server <- function(input, output, session) {
               highlight = TRUE, 
               compact = TRUE,
               fullWidth = FALSE,
+              defaultExpanded = TRUE,
               #groupBy = "PlotID",
               groupBy = switch(fileType(),
                                rw = "PlotID",

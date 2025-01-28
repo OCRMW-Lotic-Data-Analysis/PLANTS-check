@@ -18,7 +18,7 @@ dynamicColWidths <- function(tableData, otherColDefs = NULL){
     }
     
     # When grouping rows, add a few characters for the EvaluationID appended row count (e.g. "XE-SS-5141_2013-08-23 (10)")
-    if (colName == "EvaluationID" | colName == "PlotID"){
+    if (colName == "EvaluationID" | colName == "PlotID" | colName == "PointID"){
       ncharVal <- ncharVal + 3
     }
     

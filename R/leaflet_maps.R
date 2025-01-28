@@ -39,7 +39,7 @@ plant_check_map_proxy_rw <- function(mapId, data){
     )
 }
 
-# Proxy map - R&W Data
+# Proxy map - Lotic Data
 plant_check_map_proxy_lotic <- function(mapId, data){
   
   data <- data %>% st_transform(crs = 4326)
