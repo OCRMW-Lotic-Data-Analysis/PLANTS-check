@@ -42,18 +42,8 @@ ui <-  page_navbar(
                   ),
                 tags$hr(),
                 h5("Data Type:")
-                # radioButtons("project", "Project",
-                #              choices = c(
-                #                "Lotic" = "Lotic",
-                #                "Terrestrial" = "Terrestrial",
-                #                "R&W" = "R&W"
-                #                ),
-                #              selected = 'Lotic'
-                #              ),
-                
                ),
               # Main page
-              #dataTableOutput("contents"),
               leafletOutput("plant_map")
              ),
             ),
@@ -104,17 +94,18 @@ server <- function(input, output, session) {
   
   ## Page 1 --------------------------------------------------------------------
   
-  fileType <- reactive({
-    identifyFileType(input$speciesFile$datapath)})
-  
+  # Get file type and point id column name for the uploaded file.
+  # Used for filtering, tables, and maps.
+  fileMetaData <- reactiveVal()
+  observeEvent(input$speciesFile$datapath,{
+    fileMetaData(identifyFileMetadata(input$speciesFile$datapath))
+  })
+
   # Run check on uploaded data
   checked_data <- reactive({
     req(input$speciesFile)
-
-    # fileType <- identifyFileType(input$speciesFile$datapath)
-    # print(fileType)
  
-    chkdat <- switch(fileType(),
+    chkdat <- switch(fileMetaData()$fileType,
                      rw = rw_check(speciesFile = input$speciesFile$datapath,
                                    plotLocations = "./appData/R&WAIM_2024_Plots_0.csv",
                                    counties = counties_gpkg,
@@ -138,10 +129,9 @@ server <- function(input, output, session) {
   
   # Add points to map once data is uploaded.
   observeEvent(checked_data(),{
-    switch(fileType(),
+    switch(fileMetaData()$fileType,
            rw = plant_check_map_proxy_rw(mapId = "plant_map", data = checked_data()),
            lotic = plant_check_map_proxy_lotic(mapId = "plant_map", data = checked_data()))
-    #plant_check_map_proxy_rw(mapId = "plant_map", data = checked_data())
   })
   
   ## Page 2 --------------------------------------------------------------------
@@ -152,16 +142,18 @@ server <- function(input, output, session) {
     updatePickerInput(
       session = session,
       inputId = "point_picker",
-      choices = as.vector(unique(checked_data()$PlotID)) %>% sort(), # "" to force blank entry in dropdown
+      choices = checked_data() %>% pull(fileMetaData()$ptColName) %>% unique() %>% sort(),
+      #choices = as.vector(unique(checked_data()$PlotID)) %>% sort(),
       selected = NULL)
     })
 
-  
+  # Filter data displayed in table
   checked_data_filtered <- reactive({
     filtered_data <- checked_data()
     
-    # Pickerinput 
-    filtered_data <- subset(filtered_data, PlotID %in% input$point_picker)
+    # Pickerinput filter.  !! NOTE the !!sym().  This is needed to make the string fileMetaData()$ptColName work with %in%
+    filtered_data <- filtered_data %>% filter(!!sym(fileMetaData()$ptColName) %in% input$point_picker)
+    print(filtered_data)
     
     # Include "False" matches only.  False = is NOT found in county, TRUE = is found in county.
     if (input$false==TRUE) {
@@ -176,28 +168,10 @@ server <- function(input, output, session) {
     filtered_data
   })
   
-    # Render table after accounting for filters
-    #output$siteTable <- renderDataTable({unknown.false.model.data() })
-    # output$checkTable <- renderReactable({
-    #   req(unknown.false.model.data())
-    #   tableDat <- unknown.false.model.data() %>% 
-    #     st_drop_geometry() %>% 
-    #     select(!c(present, state_full))
-    #   reactable(tableDat,
-    #             pagination = FALSE, 
-    #             highlight = TRUE, 
-    #             compact = TRUE,
-    #             fullWidth = FALSE,
-    #             #groupBy = "PlotID",
-    #             groupBy = switch(fileType(),
-    #                    rw = "PlotID",
-    #                    lotic= "PointID"),
-    #             columns = dynamicColWidths(tableDat))
-    #             })
-    
-  # DOESNT ACCOUNT FOR FILTERS YET
+  # Render table after accounting for filters
   output$checkTable <- renderReactable({
     req(nrow(checked_data_filtered()) > 0)
+    
     tableDat <- checked_data_filtered() %>% 
       st_drop_geometry() %>% 
       select(!c(present, state_full))
@@ -207,13 +181,9 @@ server <- function(input, output, session) {
               compact = TRUE,
               fullWidth = FALSE,
               defaultExpanded = TRUE,
-              #groupBy = "PlotID",
-              groupBy = switch(fileType(),
-                               rw = "PlotID",
-                               lotic= "PointID"),
+              groupBy = fileMetaData()$ptColName,
               columns = dynamicColWidths(tableDat))
   })
-  
   
   
 } # end server

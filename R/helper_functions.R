@@ -49,7 +49,7 @@ dynamicColWidths <- function(tableData, otherColDefs = NULL){
 
 
 # Identify the file type of the uplaoded file (e.g. R&W, Terrestrial, or Lotic)
-identifyFileType <- function (uploadedFile){
+identifyFileMetadata <- function (uploadedFile){
   ext <- tools::file_ext(uploadedFile) %>% unique()
   if (ext == "csv") {
     # Get header for uploaded data.  Used to identify between terrestrial and r&w CSVs
@@ -58,13 +58,19 @@ identifyFileType <- function (uploadedFile){
     # R&W
     if (str_detect(headers, pattern = "SpecRichDetailEvaluationID")){
       fileType <- "rw"
+      ptColName <- "PlotID"
     # Terrestrial
     } else if (str_detect(headers, pattern = "Plot ID")) {
       fileType <- "terrestrial"
+      ptColName <- "Plot_ID"
     }
     # Lotic
   } else if (ext == "xlsm") {
     fileType = "lotic"
+    ptColName <- "PointID"
   }
-  return(fileType)
+  
+  dat <- list(fileType = fileType, ptColName = ptColName)
+  print(dat)
+  return(dat)
 }

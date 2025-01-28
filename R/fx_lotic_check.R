@@ -1,5 +1,5 @@
 # speciesFile <- "C:/Users/ianhe/OneDrive - The University of Montana/EMMA/analysis/PLANTS-check/sampleData/species_richness_terrestrial.csv"
-# plotLocations <- "C:/Users/ianhe/OneDrive - The University of Montana/EMMA/analysis/PLANTS-check/appData/LoticAIM_2024_Points.csv"
+ plotLocations <- "C:/Users/ianhe/OneDrive - The University of Montana/EMMA/analysis/PLANTS-check/appData/LoticAIM_2024_Points.csv"
 # counties <- counties <- st_read("C:/Users/ianhe/OneDrive - The University of Montana/EMMA/analysis/PLANTS-check/appData/counties.gpkg", quiet = TRUE) %>%
 #   st_transform(crs = 4326)
 # stateAbbrv = "NV"
@@ -61,52 +61,4 @@ lotic_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbr
   
   return(species)
   
-
   }
-
-  
-  
-  
-  
-  
-  
-  
-  
-
-
-
-  # 
-  # # Load terrestrial file
-  # species_richness_dat_raw <- read.csv(speciesFile, check.names = FALSE)
-  # 
-  # # Grab necessary data, turn into long form (e.g., separate rows), then format X, Y to be spatial
-  # species_richness_dat <- species_richness_dat_raw %>%
-  #   select(`Plot ID`,`Plot Key`, AllSpeciesCheck, AdminState,x, y) %>%
-  #   separate_longer_delim(AllSpeciesCheck, delim = ",") %>%
-  #   mutate(AllSpeciesCheck = str_trim(AllSpeciesCheck)) %>%
-  #   st_as_sf(coords = c("x", "y"), crs = 4326)
-  # 
-  # species <- st_join(species_richness_dat, 
-  #                    counties %>% select(NAME, STATE_NAME), 
-  #                    join = st_intersects) %>%
-  #   rename(Plot_ID = `Plot ID`, Plot_Key = `Plot Key`, state_full = STATE_NAME, state = AdminState, county = NAME) %>%
-  #   filter(state == stateAbbrv)
-  # 
-  # 
-  # sample_county <- unique(species$county)
-  # species$present <-  species %>%
-  #   left_join(filter(NV_PLANT_sum, county==sample_county), join_by(PLANT_code), keep=TRUE) %>%
-  #   select(PLANT_code.y) %>%
-  #   st_drop_geometry() %>%
-  #   unlist()
-  # 
-  # 
-  # sample_county <- unique(species$county)
-  # species$present <-  species %>%
-  #   left_join(plantDB, by=join_by("AllSpeciesCheck" == "PLANT_code", "county"), keep=TRUE) %>%
-  #   select(PLANT_code) %>%
-  #   st_drop_geometry() %>%
-  #   unlist()
-  # 
-  # species$status <- species$present %in% species$PLANT_code
-  
