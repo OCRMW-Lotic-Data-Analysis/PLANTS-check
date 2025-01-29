@@ -28,8 +28,8 @@ ui <-  page_navbar(
                              choices = c(
                                "NV" = "NV",
                                "ID" = "ID",
-                               "MT" = "MT"
-                             )),
+                               "MT" = "MT")
+                             ),
                 fileInput(
                   "speciesFile",
                   "Choose Species File",
