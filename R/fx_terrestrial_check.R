@@ -41,8 +41,8 @@ terr_check <- function(speciesFile, counties, plantDB, stateAbbrv){
     st_drop_geometry() %>%
     unlist()
   
-  species$status <- species$present %in% species$PLANT_code
-  
+  #species$status <- species$present %in% species$PLANT_code
+  species$expectedInCounty <- species$present %in% species$speciesCode
 }
 
 

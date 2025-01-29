@@ -6,8 +6,8 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbrv){
   species_richness_dat_raw <- read.csv(speciesFile)
   
   species_richness_dat <- species_richness_dat_raw %>% select(SpecRichDetailEvaluationID, Select.Plant.Species) %>%
-    rename(PLANT_code = Select.Plant.Species) %>%
-    mutate(PlotID = str_split_i(SpecRichDetailEvaluationID , pattern = "_", 1), .keep = "unused" , .before = PLANT_code) %>%
+    rename(speciesCode = Select.Plant.Species) %>%
+    mutate(PlotID = str_split_i(SpecRichDetailEvaluationID , pattern = "_", 1), .keep = "unused" , .before = speciesCode) %>%
     distinct()
   
   # Load data file with spatial data----
@@ -33,13 +33,14 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbrv){
   
   # Join that lists the plant code again if it is located in the county
   species$present <-  species %>%
-    left_join(plantDB, by=c("PLANT_code", "county"), keep=TRUE) %>%
-    select(PLANT_code.y) %>%
+    left_join(plantDB, by=join_by("speciesCode" == "PLANT_code", "county"), keep=TRUE) %>%
+    select(PLANT_code) %>%
     st_drop_geometry() %>%
     unlist()
   
   # Creates a new column with True or False by comparing columns.
-  species$status <- species$present %in% species$PLANT_code
+  #species$status <- species$present %in% species$speciesCode
+  species$expectedInCounty <- species$present %in% species$speciesCode
   
   return(species)
 }

@@ -1,5 +1,5 @@
 # speciesFile <- "C:/Users/ianhe/OneDrive - The University of Montana/EMMA/analysis/PLANTS-check/sampleData/species_richness_terrestrial.csv"
- plotLocations <- "C:/Users/ianhe/OneDrive - The University of Montana/EMMA/analysis/PLANTS-check/appData/LoticAIM_2024_Points.csv"
+ #plotLocations <- "C:/Users/ianhe/OneDrive - The University of Montana/EMMA/analysis/PLANTS-check/appData/LoticAIM_2024_Points.csv"
 # counties <- counties <- st_read("C:/Users/ianhe/OneDrive - The University of Montana/EMMA/analysis/PLANTS-check/appData/counties.gpkg", quiet = TRUE) %>%
 #   st_transform(crs = 4326)
 # stateAbbrv = "NV"
@@ -57,8 +57,9 @@ lotic_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbr
     unlist()
   
   # Creates a new column with True or False by comparing columns.
-  species$status <- species$present %in% species$PLANT_code
+  #species$status <- species$present %in% species$speciesCode
   
+  species$expectedInCounty <- species$present %in% species$speciesCode
   return(species)
   
   }

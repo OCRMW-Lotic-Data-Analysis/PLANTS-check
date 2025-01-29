@@ -15,12 +15,12 @@ library(shinyWidgets)
 # Define UI --------------------------------------------------------------------
 ui <-  page_navbar(
   title = "PLANT database check",
-  selected = "1. Upload raw data",
+  selected = "1. Upload",
   collapsible = TRUE,
   theme = bslib::bs_theme(font_scale = NULL, preset = "yeti"),
   
   # Page 1 - upload raw data
-  nav_panel(title = "1. Upload raw data",
+  nav_panel(title = "1. Upload",
             page_sidebar(
               # Sidebar
               sidebar = sidebar(
@@ -50,7 +50,7 @@ ui <-  page_navbar(
   
   # Page 2 - compare plant list with PLANTS database
   nav_panel(
-    title = "2. Compare",
+    title = "2. Inspect",
     # Check box to filter out positive matches 
     page_sidebar(
       # Sidebar
@@ -157,12 +157,12 @@ server <- function(input, output, session) {
     
     # Include "False" matches only.  False = is NOT found in county, TRUE = is found in county.
     if (input$false==TRUE) {
-      filtered_data <- subset(filtered_data, status == 'FALSE')
+      filtered_data <- subset(filtered_data, expectedInCounty == 'FALSE')
     }
     
     # Include Unknown plants or not
     if (input$unk==TRUE) {
-      filtered_data <- subset(filtered_data,!grepl("[XXXX]", filtered_data$PLANT_code))
+      filtered_data <- subset(filtered_data,!grepl("[XXXX]", filtered_data$speciesCode))
     }
     
     filtered_data
