@@ -36,7 +36,7 @@ lotic_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbr
   
   # Simplify spatial data
   species_richness_spatial <- species_richness_spatial_raw %>%
-    select(PointID,AdminState, x, y) %>%
+    select(PointID,AdminState, District, FieldOffice, x, y) %>%
     distinct()
   
   species_sum <- species_richness_dat %>%

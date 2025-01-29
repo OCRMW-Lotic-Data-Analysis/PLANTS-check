@@ -15,7 +15,7 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbrv){
   
   # Filter spatial data file to include Plot ID (4), Evaluation ID (5), X and Y (20 and 21)----
   species_richness_spatial <- species_richness_spatial_raw %>%
-    select(PlotID,AdminState, x, y) %>%
+    select(PlotID,AdminState, FieldOffice, DistrictOffice, x, y) %>%
     distinct()
   
   # Join spatial data and species richness data by PlotID There are many coordinates with R&W data so this just grabs the first match.
