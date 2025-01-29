@@ -9,6 +9,7 @@
 # files <- list.files("C:/Users/ianhe/OneDrive - The University of Montana/EMMA/analysis/MIM_compile/output_to_share/mim_data_2023/2023/battle_mtn_nv_mim_2023/data_analysis_battle_mtn_nv_mim_2023/", full.names = TRUE)[1:2]
 
 
+# Extract species codes from single MIM file.  Used in map() when user uploads single or multiple MIM files.
 get_single_MIM_data <- function(filePath) {
 
   PointID <- read_excel(filePath, sheet = 'Header', range = 'A10', col_names = FALSE, .name_repair = "unique_quiet")[[1]]
@@ -22,7 +23,7 @@ get_single_MIM_data <- function(filePath) {
 
 #speciesFile <- map_dfr(files, get_single_MIM_data)
 
-
+#Check Lotic Data
 lotic_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbrv){
   # Load species richness data----
   species_richness_dat_raw <- speciesFile
@@ -33,7 +34,7 @@ lotic_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbr
   # Load data file with spatial data----
   species_richness_spatial_raw <- read.csv(plotLocations)
   
-  # Filter spatial data file to include
+  # Simplify spatial data
   species_richness_spatial <- species_richness_spatial_raw %>%
     select(PointID,AdminState, x, y) %>%
     distinct()
@@ -57,9 +58,7 @@ lotic_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbr
     unlist()
   
   # Creates a new column with True or False by comparing columns.
-  #species$status <- species$present %in% species$speciesCode
-  
   species$expectedInCounty <- species$present %in% species$speciesCode
-  return(species)
   
+  return(species)
   }

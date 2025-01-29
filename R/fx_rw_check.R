@@ -39,7 +39,6 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbrv){
     unlist()
   
   # Creates a new column with True or False by comparing columns.
-  #species$status <- species$present %in% species$speciesCode
   species$expectedInCounty <- species$present %in% species$speciesCode
   
   return(species)

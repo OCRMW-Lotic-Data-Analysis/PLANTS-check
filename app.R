@@ -27,7 +27,8 @@ ui <-  page_navbar(
                 radioButtons("workingState", "State",
                              choices = c(
                                "NV" = "NV",
-                               "ID" = "ID"
+                               "ID" = "ID",
+                               "MT" = "MT"
                              )),
                 fileInput(
                   "speciesFile",
@@ -41,7 +42,6 @@ ui <-  page_navbar(
                     )
                   ),
                 tags$hr(),
-                h5("Data Type:")
                ),
               # Main page
               leafletOutput("plant_map")
@@ -73,7 +73,6 @@ ui <-  page_navbar(
                     options = pickerOptions(actionsBox = TRUE))
         ),
       # Main Page
-      #dataTableOutput("siteTable")
       reactableOutput("checkTable")
       )
     )
