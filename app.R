@@ -20,33 +20,33 @@ ui <-  page_navbar(
   theme = bslib::bs_theme(font_scale = NULL, preset = "yeti"),
   
   # Page 1 - upload raw data
-  nav_panel(title = "1. Upload",
-            page_sidebar(
-              # Sidebar
-              sidebar = sidebar(
-                radioButtons("workingState", "State",
-                             choices = c(
-                               "NV" = "NV",
-                               "ID" = "ID",
-                               "MT" = "MT")
-                             ),
-                fileInput(
-                  "speciesFile",
-                  "Choose Species File",
-                  multiple = TRUE,
-                  accept = c(
-                    "text/csv",
-                    "text/comma-separated-values,text/plain",
-                    ".csv",
-                    ".xlsm"
-                    )
-                  ),
-                tags$hr(),
-               ),
-              # Main page
-              leafletOutput("plant_map")
-             ),
-            ),
+  nav_panel(
+    title = "1. Upload",
+    page_sidebar(
+      # Sidebar
+      sidebar = sidebar(
+        radioButtons("workingState", "State",
+                     choices = c(
+                       "NV" = "NV",
+                       "ID" = "ID",
+                       "MT" = "MT")),
+        fileInput(
+          "speciesFile",
+          "Choose Species File",
+          multiple = TRUE,
+          accept = c(
+            "text/csv",
+            "text/comma-separated-values,text/plain",
+            ".csv",
+            ".xlsm"
+            )
+          ),
+        tags$hr(),
+        ),
+      # Main page
+      leafletOutput("plant_map")
+      ),
+    ),
   
   # Page 2 - compare plant list with PLANTS database
   nav_panel(
