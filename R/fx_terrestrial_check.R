@@ -1,13 +1,5 @@
-# speciesFile <- "C:/Users/ianhe/OneDrive - The University of Montana/EMMA/analysis/PLANTS-check/sampleData/species_richness_terrestrial.csv"
-# counties <- counties <- st_read("C:/Users/ianhe/OneDrive - The University of Montana/EMMA/analysis/PLANTS-check/appData/counties.gpkg", quiet = TRUE) %>%
-#   st_transform(crs = 4326) 
-# stateAbbrv = "ID"
-# plantDB <- read.csv("./appData/NV_PLANT_sum.csv") %>% select(-sci_name)
-#TERRESTRIAL CODE - 
-
-# !!! NOT WORKING AS EXTERNAL FUNCTION YET
+# Check terrestrial data
 terr_check <- function(speciesFile, counties, plantDB){
-  
   
   # Load terrestrial species richness
   species_richness_dat_raw <- read.csv(speciesFile, check.names = FALSE)

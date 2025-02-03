@@ -18,7 +18,7 @@ dynamicColWidths <- function(tableData, otherColDefs = NULL){
     }
     
     # When grouping rows, add a few characters for the EvaluationID appended row count (e.g. "XE-SS-5141_2013-08-23 (10)")
-    if (colName == "EvaluationID" | colName == "PlotID" | colName == "PointID"){
+    if (colName == "Plot_ID" | colName == "PlotID" | colName == "PointID"){
       ncharVal <- ncharVal + 3
     }
     
@@ -70,7 +70,7 @@ identifyFileMetadata <- function (uploadedFile){
     ptColName <- "PointID"
   }
   
-  dat <- list(fileType = fileType, ptColName = ptColName)
-  print(dat)
-  return(dat)
+  metaDat <- list(fileType = fileType, ptColName = ptColName)
+
+  return(metaDat)
 }

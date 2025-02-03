@@ -1,5 +1,4 @@
 # Check R&W data
-
 rw_check <- function(speciesFile, plotLocations, counties, plantDB){
   
   # Load species richness data---- 
