@@ -21,10 +21,16 @@ plant_check_map <- function() {
 
 }
 
-# Proxy map - R&W Data
-plant_check_map_proxy_rw <- function(mapId, data){
+
+# Proxy map - Adds data to map once uploaded
+plant_check_map_proxy <- function(mapId, data, idName){
   
-  data <- data %>% st_transform(crs = 4326)
+  # Convert to correct crs and only keep one point per PointID/PlotID. Otherwise, it plots
+  # many overlapping points with one point per PointID/species code combo.  Renders faster this way.
+  data <- data %>% st_transform(crs = 4326) %>%
+    distinct(!!sym(idName), .keep_all = TRUE)
+  
+  labs <- data %>% pull(idName)
   
   leafletProxy(mapId, data = data) %>%
     clearMarkers() %>%
@@ -35,25 +41,8 @@ plant_check_map_proxy_rw <- function(mapId, data){
                      stroke = TRUE,
                      weight = 1,
                      fillOpacity = 1,
-                     label = ~PlotID
+                     label = labs
     )
 }
 
-# Proxy map - Lotic Data
-plant_check_map_proxy_lotic <- function(mapId, data){
-  
-  data <- data %>% st_transform(crs = 4326)
-  
-  leafletProxy(mapId, data = data) %>%
-    clearMarkers() %>%
-    addCircleMarkers(data = data,
-                     radius = 4,
-                     color = "white",
-                     fillColor = "blue",
-                     stroke = TRUE,
-                     weight = 1,
-                     fillOpacity = 1,
-                     label = ~PointID
-    )
-}
 

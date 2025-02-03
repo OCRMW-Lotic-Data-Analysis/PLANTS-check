@@ -25,11 +25,6 @@ ui <-  page_navbar(
     page_sidebar(
       # Sidebar
       sidebar = sidebar(
-        radioButtons("workingState", "State",
-                     choices = c(
-                       "NV" = "NV",
-                       "ID" = "ID",
-                       "MT" = "MT")),
         fileInput(
           "speciesFile",
           "Choose Species File",
@@ -108,17 +103,14 @@ server <- function(input, output, session) {
                      rw = rw_check(speciesFile = input$speciesFile$datapath,
                                    plotLocations = "./appData/R&WAIM_2024_Plots_0.csv",
                                    counties = counties_gpkg,
-                                   plantDB = all_states_plant_db,
-                                   stateAbbrv = input$workingState),
+                                   plantDB = all_states_plant_db),
                      terrestrial = terr_check(speciesFile = input$speciesFile$datapath,
                                               counties = counties_gpkg,
-                                              plantDB = all_states_plant_db,
-                                              stateAbbrv = input$workingState),
+                                              plantDB = all_states_plant_db),
                      lotic = lotic_check(speciesFile = map_dfr(input$speciesFile$datapath, get_single_MIM_data),
                                          plotLocations = "./appData/LoticAIM_2024_Points.csv",
                                          counties = counties_gpkg,
-                                         plantDB = all_states_plant_db,
-                                         stateAbbrv = input$workingState)
+                                         plantDB = all_states_plant_db)
                      )
     
     chkdat
@@ -130,12 +122,13 @@ server <- function(input, output, session) {
   })
   
   # Add points to map once data is uploaded.
-  # observeEvent(checked_data(),{
-  #   req(nrow(checked_data()) > 0)
-  #   switch(fileMetaData()$fileType,
-  #          rw = plant_check_map_proxy_rw(mapId = "plant_map", data = checked_data()),
-  #          lotic = plant_check_map_proxy_lotic(mapId = "plant_map", data = checked_data()))
-  # })
+  observeEvent(checked_data(),{
+    req(nrow(checked_data()) > 0)
+    switch(fileMetaData()$fileType,
+           rw = plant_check_map_proxy(mapId = "plant_map", data = checked_data(), idName = "PlotID"),
+           lotic = plant_check_map_proxy(mapId = "plant_map", data = checked_data(), idName = "PointID"),
+           terrestrial = plant_check_map_proxy(mapId = "plant_map", data = checked_data(), idName = "Plot_ID"))
+  })
   
   ## Page 2 --------------------------------------------------------------------
   # Sidebar panel for site filter

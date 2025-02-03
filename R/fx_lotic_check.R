@@ -24,7 +24,7 @@ get_single_MIM_data <- function(filePath) {
 #speciesFile <- map_dfr(files, get_single_MIM_data)
 
 #Check Lotic Data
-lotic_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbrv){
+lotic_check <- function(speciesFile, plotLocations, counties, plantDB){
   # Load species richness data----
   species_richness_dat_raw <- speciesFile
 
@@ -41,7 +41,6 @@ lotic_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbr
   
   species_sum <- species_richness_dat %>%
     left_join(species_richness_spatial, join_by(PointID),multiple='first') %>%
-    filter(AdminState == stateAbbrv) %>%
     st_as_sf(coords = c("x", "y"), crs = 4326)
   
   # Spatial join where plot points intersect county polygons
@@ -60,6 +59,5 @@ lotic_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbr
   # Creates a new column with True or False by comparing columns.
   species$expectedInCounty <- species$present %in% species$speciesCode
   
-  print(species)
   return(species)
   }

@@ -1,6 +1,6 @@
 # Check R&W data
 
-rw_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbrv){
+rw_check <- function(speciesFile, plotLocations, counties, plantDB){
   
   # Load species richness data---- 
   species_richness_dat_raw <- read.csv(speciesFile)
@@ -22,7 +22,6 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbrv){
   #NOTE: currently filter to NV but that will need to be updated with the radio button we talked about to filter by state.
   species_sum <- species_richness_dat %>%
     left_join(species_richness_spatial, join_by(PlotID),multiple='first') %>%
-    filter(AdminState == stateAbbrv) %>%
     st_as_sf(coords = c("x", "y"), crs = 4326)
   
   # Spatial join where plot points intersect county polygons
@@ -41,7 +40,6 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbrv){
   # Creates a new column with True or False by comparing columns.
   species$expectedInCounty <- species$present %in% species$speciesCode
   
-  print(species)
   return(species)
 }
 

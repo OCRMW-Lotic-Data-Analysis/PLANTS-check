@@ -6,7 +6,7 @@
 #TERRESTRIAL CODE - 
 
 # !!! NOT WORKING AS EXTERNAL FUNCTION YET
-terr_check <- function(speciesFile, counties, plantDB, stateAbbrv){
+terr_check <- function(speciesFile, counties, plantDB){
   
   
   # Load terrestrial species richness
@@ -24,20 +24,12 @@ terr_check <- function(speciesFile, counties, plantDB, stateAbbrv){
   species <- st_join(species_richness_dat, 
                      counties %>% select(NAME, STATE_NAME), 
                      join = st_intersects) %>%
-    rename(Plot_ID = `Plot ID`, Plot_Key = `Plot Key`, state_full = STATE_NAME, state = AdminState, county = NAME) %>%
-    filter(state == stateAbbrv)
-  
-  
-  #sample_county <- unique(species$county)
-  
-  # species$present <-  species %>%
-  #   left_join(filter(plantDB, county==sample_county), join_by(PLANT_code), keep=TRUE) %>%
-  #   select(PLANT_code.y) %>%
-  #   st_drop_geometry() %>%
-  #   unlist()
+    rename(Plot_ID = `Plot ID`, Plot_Key = `Plot Key`, state_full = STATE_NAME, state = AdminState, county = NAME)
   
   
   sample_county <- unique(species$county)
+  
+  # Join that lists the plant code again if it is located in the county
   species$present <-  species %>%
     left_join(plantDB, by=join_by("speciesCode" == "PLANT_code", "county", "state"), keep=TRUE) %>%
     select(PLANT_code) %>%
@@ -47,7 +39,6 @@ terr_check <- function(speciesFile, counties, plantDB, stateAbbrv){
   #species$status <- species$present %in% species$PLANT_code
   species$expectedInCounty <- species$present %in% species$speciesCode
   
-  print(species)
   return(species)
 }
 
