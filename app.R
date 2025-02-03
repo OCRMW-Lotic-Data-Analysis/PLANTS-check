@@ -84,7 +84,7 @@ server <- function(input, output, session) {
   # Load counties shapefile
   counties_gpkg <- st_read("./appData/counties.gpkg", quiet = TRUE) %>%
     st_transform(crs = 4326)
-  all_states_plant_db <- read.csv("./appData/ALL_PLANT_sum.csv") %>% select(-sci_name)
+  all_states_plant_db <- read.csv("./appData/All_PLANT_sum.csv") %>% select(-sci_name)
   
   ## Page 1 --------------------------------------------------------------------
   
