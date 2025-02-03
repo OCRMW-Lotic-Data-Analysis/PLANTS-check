@@ -89,7 +89,7 @@ server <- function(input, output, session) {
   # Load counties shapefile
   counties_gpkg <- st_read("./appData/counties.gpkg", quiet = TRUE) %>%
     st_transform(crs = 4326)
-  all_states_plant_db <- read.csv("./appData/NV_PLANT_sum.csv") %>% select(-sci_name)
+  all_states_plant_db <- read.csv("./appData/ALL_PLANT_sum.csv") %>% select(-sci_name)
   
   ## Page 1 --------------------------------------------------------------------
   
@@ -110,7 +110,10 @@ server <- function(input, output, session) {
                                    counties = counties_gpkg,
                                    plantDB = all_states_plant_db,
                                    stateAbbrv = input$workingState),
-                     terrestrial = "terr",
+                     terrestrial = terr_check(speciesFile = input$speciesFile$datapath,
+                                              counties = counties_gpkg,
+                                              plantDB = all_states_plant_db,
+                                              stateAbbrv = input$workingState),
                      lotic = lotic_check(speciesFile = map_dfr(input$speciesFile$datapath, get_single_MIM_data),
                                          plotLocations = "./appData/LoticAIM_2024_Points.csv",
                                          counties = counties_gpkg,
@@ -127,11 +130,12 @@ server <- function(input, output, session) {
   })
   
   # Add points to map once data is uploaded.
-  observeEvent(checked_data(),{
-    switch(fileMetaData()$fileType,
-           rw = plant_check_map_proxy_rw(mapId = "plant_map", data = checked_data()),
-           lotic = plant_check_map_proxy_lotic(mapId = "plant_map", data = checked_data()))
-  })
+  # observeEvent(checked_data(),{
+  #   req(nrow(checked_data()) > 0)
+  #   switch(fileMetaData()$fileType,
+  #          rw = plant_check_map_proxy_rw(mapId = "plant_map", data = checked_data()),
+  #          lotic = plant_check_map_proxy_lotic(mapId = "plant_map", data = checked_data()))
+  # })
   
   ## Page 2 --------------------------------------------------------------------
   # Sidebar panel for site filter

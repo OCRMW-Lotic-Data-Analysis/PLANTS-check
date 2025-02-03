@@ -60,5 +60,6 @@ lotic_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbr
   # Creates a new column with True or False by comparing columns.
   species$expectedInCounty <- species$present %in% species$speciesCode
   
+  print(species)
   return(species)
   }

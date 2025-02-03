@@ -17,6 +17,7 @@ terr_check <- function(speciesFile, counties, plantDB, stateAbbrv){
     select(`Plot ID`,`Plot Key`, AllSpeciesCheck, AdminState,x, y) %>%
     separate_longer_delim(AllSpeciesCheck, delim = ",") %>%
     mutate(AllSpeciesCheck = str_trim(AllSpeciesCheck)) %>%
+    rename(speciesCode = AllSpeciesCheck) %>%
     st_as_sf(coords = c("x", "y"), crs = 4326)
   
   # Spatial join where plot points intersect county polygons
@@ -27,23 +28,26 @@ terr_check <- function(speciesFile, counties, plantDB, stateAbbrv){
     filter(state == stateAbbrv)
   
   
+  #sample_county <- unique(species$county)
+  
+  # species$present <-  species %>%
+  #   left_join(filter(plantDB, county==sample_county), join_by(PLANT_code), keep=TRUE) %>%
+  #   select(PLANT_code.y) %>%
+  #   st_drop_geometry() %>%
+  #   unlist()
+  
+  
   sample_county <- unique(species$county)
-  
   species$present <-  species %>%
-    left_join(filter(NV_PLANT_sum, county==sample_county), join_by(PLANT_code), keep=TRUE) %>%
-    select(PLANT_code.y) %>%
-    st_drop_geometry() %>%
-    unlist()
-  
-  
-  sample_county <- unique(species$county)
-  species$present <-  species %>%
-    left_join(plantDB, by=join_by("AllSpeciesCheck" == "PLANT_code", "county"), keep=TRUE) %>%
+    left_join(plantDB, by=join_by("speciesCode" == "PLANT_code", "county", "state"), keep=TRUE) %>%
     select(PLANT_code) %>%
     st_drop_geometry() %>%
     unlist()
   
   #species$status <- species$present %in% species$PLANT_code
   species$expectedInCounty <- species$present %in% species$speciesCode
+  
+  print(species)
+  return(species)
 }
 

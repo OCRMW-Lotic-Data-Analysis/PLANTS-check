@@ -15,7 +15,7 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbrv){
   
   # Filter spatial data file to include Plot ID (4), Evaluation ID (5), X and Y (20 and 21)----
   species_richness_spatial <- species_richness_spatial_raw %>%
-    select(PlotID,AdminState, FieldOffice, DistrictOffice, x, y) %>%
+    select(PlotID,AdminState, x, y) %>%
     distinct()
   
   # Join spatial data and species richness data by PlotID There are many coordinates with R&W data so this just grabs the first match.
@@ -33,7 +33,7 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbrv){
   
   # Join that lists the plant code again if it is located in the county
   species$present <-  species %>%
-    left_join(plantDB, by=join_by("speciesCode" == "PLANT_code", "county"), keep=TRUE) %>%
+    left_join(plantDB, by=join_by("speciesCode" == "PLANT_code", "county", "state"), keep=TRUE) %>%
     select(PLANT_code) %>%
     st_drop_geometry() %>%
     unlist()
@@ -41,6 +41,7 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB, stateAbbrv){
   # Creates a new column with True or False by comparing columns.
   species$expectedInCounty <- species$present %in% species$speciesCode
   
+  print(species)
   return(species)
 }
 
