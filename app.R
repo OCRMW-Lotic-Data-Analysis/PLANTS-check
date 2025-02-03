@@ -149,7 +149,6 @@ server <- function(input, output, session) {
     
     # Pickerinput filter.  !! NOTE the !!sym().  This is needed to make the string fileMetaData()$ptColName work with %in%
     filtered_data <- filtered_data %>% filter(!!sym(fileMetaData()$ptColName) %in% input$point_picker)
-    print(filtered_data)
     
     # Include "False" matches only.  False = is NOT found in county, TRUE = is found in county.
     if (input$false==TRUE) {
