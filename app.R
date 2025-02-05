@@ -11,10 +11,13 @@ library(leaflet)
 library(sf)
 library(readxl)
 library(shinyWidgets)
+library(markdown)
+library(here)
+shiny::addResourcePath(prefix = "www", directoryPath = here::here("www"))
 
 # Define UI --------------------------------------------------------------------
 ui <-  page_navbar(
-  title = "PLANT database check",
+  title = "PLANT Database Check",
   selected = "1. Upload",
   collapsible = TRUE,
   theme = bslib::bs_theme(font_scale = NULL, preset = "yeti"),
@@ -27,7 +30,7 @@ ui <-  page_navbar(
       sidebar = sidebar(
         fileInput(
           "speciesFile",
-          "Choose Species File",
+          "Upload Species File",
           multiple = TRUE,
           accept = c(
             "text/csv",
@@ -70,7 +73,13 @@ ui <-  page_navbar(
       # Main Page
       reactableOutput("checkTable")
       )
+    ),
+  nav_panel(
+    title = "Help",
+    card(
+      includeMarkdown("./appData/plant_check_help.md")
     )
+  )
   ) # end ui
 
 # Define server ----------------------------------------------------------------
