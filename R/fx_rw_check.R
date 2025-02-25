@@ -29,16 +29,18 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB){
                      join = st_intersects) %>%
     rename(state_full = STATE_NAME, state = AdminState, county = NAME)
   
-  # Join that lists the plant code again if it is located in the county
-  species$present <-  species %>%
-    left_join(plantDB, by=join_by("speciesCode" == "PLANT_code", "county", "state"), keep=TRUE) %>%
-    select(PLANT_code) %>%
-    st_drop_geometry() %>%
-    unlist()
-  
-  # Creates a new column with True or False by comparing columns.
-  species$expectedInCounty <- species$present %in% species$speciesCode
-  
-  return(species)
+  # Check if plant is expected in county
+  speciesFinal <- species %>%
+    left_join(plantDB, by=join_by("speciesCode" == "PLANT_code", "county", "state"), keep = TRUE) %>%
+    mutate(expectedInCounty = case_when(is.na(PLANT_code) ~ FALSE,
+                                        speciesCode == PLANT_code ~ TRUE)) %>%
+    select(PlotID, # unique to RW
+           speciesCode,
+           speciesCode,
+           state = state.x,
+           county = county.x,
+           expectedInCounty)
+
+  return(speciesFinal)
 }
 

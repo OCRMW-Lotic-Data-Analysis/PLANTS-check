@@ -21,16 +21,19 @@ terr_check <- function(speciesFile, counties, plantDB){
   
   sample_county <- unique(species$county)
   
-  # Join that lists the plant code again if it is located in the county
-  species$present <-  species %>%
-    left_join(plantDB, by=join_by("speciesCode" == "PLANT_code", "county", "state"), keep=TRUE) %>%
-    select(PLANT_code) %>%
-    st_drop_geometry() %>%
-    unlist()
+  # Check if plant is expected in county
+  speciesFinal <- species %>%
+    left_join(plantDB, by=join_by("speciesCode" == "PLANT_code", "county", "state"), keep = TRUE) %>%
+    mutate(expectedInCounty = case_when(is.na(PLANT_code) ~ FALSE,
+                                        speciesCode == PLANT_code ~ TRUE)) %>%
+    select(Plot_ID, # unique to terrestrial
+           Plot_Key, # unique to terrestrial
+           speciesCode, 
+           speciesCode, 
+           state = state.x, 
+           county = county.x, 
+           expectedInCounty)
   
-  #species$status <- species$present %in% species$PLANT_code
-  species$expectedInCounty <- species$present %in% species$speciesCode
-  
-  return(species)
+  return(speciesFinal)
 }
 

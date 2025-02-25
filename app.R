@@ -177,8 +177,8 @@ server <- function(input, output, session) {
     req(nrow(checked_data_filtered()) > 0)
     
     tableDat <- checked_data_filtered() %>% 
-      st_drop_geometry() %>% 
-      select(!c(present, state_full))
+      st_drop_geometry()
+    
     reactable(tableDat,
               pagination = FALSE, 
               highlight = TRUE, 
