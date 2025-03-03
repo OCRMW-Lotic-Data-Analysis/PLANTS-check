@@ -117,7 +117,7 @@ server <- function(input, output, session) {
                                               counties = counties_gpkg,
                                               plantDB = all_states_plant_db),
                      lotic = lotic_check(speciesFile = map_dfr(input$speciesFile$datapath, get_single_MIM_data),
-                                         plotLocations = "./appData/LoticAIM_2024_Points.csv",
+                                         plotLocations = "./appData/lotic_aim_points_2021-2024.csv",
                                          counties = counties_gpkg,
                                          plantDB = all_states_plant_db)
                      )
