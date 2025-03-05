@@ -41,7 +41,7 @@ ui <-  page_navbar(
             ".xlsm"
             )
           ),
-        p("Note: The app can process ~10 plots per second so please be patient when uploading larger or many files.",
+        p("The app can process ~10 plots per second so please be patient when uploading larger or many files.",
           style = "font-size: 12px;"),
         ),
       # Main page
@@ -71,7 +71,9 @@ ui <-  page_navbar(
                     choices = NULL,
                     selected = NULL,
                     multiple = TRUE,
-                    options = pickerOptions(actionsBox = TRUE))
+                    options = pickerOptions(actionsBox = TRUE)),
+        p("'expectedInAdjacentCounty' currently only shows adajcent counties in OCRMW working states (NV, ID, MT, WY).  Soon, it will include counties in neighboring states.",
+          style = "font-size: 12px;"),
         ),
       # Main Page
       reactableOutput("checkTable")
