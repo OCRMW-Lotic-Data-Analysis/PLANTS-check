@@ -40,21 +40,25 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB, adjCounties)
            county = county.x,
            expectedInCounty)
   
-  print("before")
-  print(speciesFinal)
-  
   # Check if plant is found in adjacent counties
   adjCountyCheck <- function(speciesCode, state, county, plantDBadj = plantDB,...) {
+    # plantDB and adjCounties counties share variable names but pmap is expecting the colnames as arugments.
+    # Probably a better way to do this that isnt so confusing but here, the names are changed to differentiate.
     species <- speciesCode
     st <- state
     co <- county
+    
+    # Find neighboring counties for current point/plot's county.
     neighbors <- adjCounties %>% filter(state == st, county == co)
+    
+    # Check if plant exists in neighboring county.
     adjcnty <- plantDBadj %>% rename(speciesCode = "PLANT_code") %>%
       filter(state %in% neighbors$neighbor_state,
              county %in% neighbors$neighbor_county,
              speciesCode == species) %>%
-      pull(county) %>%
-      str_subset(pattern = county, negate = TRUE)
+      select(state, county) %>%
+      mutate(co_st = paste0(county, " ", "(",state,")" ) ) %>%
+      pull(co_st)
     
     if (length(adjcnty) == 0){
       dat <- "None"
@@ -65,10 +69,8 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB, adjCounties)
     return(dat)
   }
   
+  # Execute adjCountyCheck() function
   speciesFinal$expectedInAdjacentCounty <- pmap(speciesFinal, adjCountyCheck) %>% unlist(use.names = FALSE)
-  
-  print("after")
-  print(speciesFinal)
   
   return(speciesFinal)
 }
