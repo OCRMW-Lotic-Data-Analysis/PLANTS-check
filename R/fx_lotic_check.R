@@ -1,6 +1,6 @@
 # Extract species codes from single MIM file.  Used in map() when user uploads single or multiple MIM files.
 get_single_MIM_data <- function(filePath) {
-
+  
   PointID <- read_excel(filePath, sheet = 'Header', range = 'A10', col_names = FALSE, .name_repair = "unique_quiet")[[1]]
   speciesCode <- read_excel(filePath, sheet = 'DMA', range = 'B5:B502', col_names = FALSE, .name_repair = "unique_quiet")[[1]] %>% 
     na.omit() %>% 
@@ -13,7 +13,7 @@ get_single_MIM_data <- function(filePath) {
 #speciesFile <- map_dfr(files, get_single_MIM_data)
 
 # Check Lotic Data
-lotic_check <- function(speciesFile, plotLocations, counties, plantDB){
+lotic_check <- function(speciesFile, plotLocations, counties, plantDB, adjCounties){
   # Load species richness data----
   species_richness_dat_raw <- speciesFile
 
@@ -37,7 +37,7 @@ lotic_check <- function(speciesFile, plotLocations, counties, plantDB){
                      counties %>% select(NAME, STATE_NAME), 
                      join = st_intersects) %>%
     rename(state_full = STATE_NAME, state = AdminState, county = NAME)
-  
+
   # Check if plant is expected in county
   speciesFinal <- species %>%
     left_join(plantDB, by=join_by("speciesCode" == "PLANT_code", "county", "state"), keep = TRUE) %>%
@@ -45,10 +45,35 @@ lotic_check <- function(speciesFile, plotLocations, counties, plantDB){
                                         speciesCode == PLANT_code ~ TRUE)) %>%
     select(PointID, # unique to Lotic
            speciesCode,
-           speciesCode,
            state = state.x,
            county = county.x,
-           expectedInCounty)
+           expectedInCounty,
+           expectedInAdjacentCounty)
+  
 
+  # Check if plant is found in adjacent counties
+  adjCountyCheck <- function(speciesCode, state, county, plantDBadj = plantDB,...) {
+    species <- speciesCode
+    st <- state
+    co <- county
+    neighbors <- adjCounties %>% filter(state == st, county == co)
+    adjcnty <- plantDBadj %>% rename(speciesCode = "PLANT_code") %>%
+      filter(state %in% neighbors$neighbor_state,
+             county %in% neighbors$neighbor_county,
+             speciesCode == species) %>%
+      pull(county) %>%
+      str_subset(pattern = county, negate = TRUE)
+
+    if (length(adjcnty) == 0){
+      dat <- "None"
+    } else {
+      dat <- paste0(adjcnty, collapse = ", ")
+    }
+
+    return(dat)
+  }
+
+  speciesFinal$expectedInAdjacentCounty <- pmap(speciesFinal, adjCountyCheck) %>% unlist(use.names = FALSE)
+  
   return(speciesFinal)
   }

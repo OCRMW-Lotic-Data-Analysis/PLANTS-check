@@ -15,6 +15,8 @@ library(markdown)
 library(here)
 shiny::addResourcePath(prefix = "www", directoryPath = here::here("www"))
 
+
+
 # Define UI --------------------------------------------------------------------
 ui <-  page_navbar(
   title = "PLANT Database Check",
@@ -39,7 +41,8 @@ ui <-  page_navbar(
             ".xlsm"
             )
           ),
-        tags$hr(),
+        p("Note: The app can process ~10 plots per second so please be patient when uploading larger or many files.",
+          style = "font-size: 12px;"),
         ),
       # Main page
       leafletOutput("plant_map")
@@ -90,16 +93,24 @@ server <- function(input, output, session) {
   # Allow uploads up to 200MB. Only useful for many MIM files.
   options(shiny.maxRequestSize = 200*1024^2)
   
-  # Load counties shapefile
+  # Counties shapefile
   counties_gpkg <- st_read("./appData/counties.gpkg", quiet = TRUE) %>%
     st_transform(crs = 4326)
+  
+  # PlantDB
   all_states_plant_db <- read.csv("./appData/All_PLANT_sum.csv") %>% select(-sci_name)
+  
+  # Adjacent county info
+  #adjCounties <- reactive({read.csv("./appData/adjacent_counties_working.csv")})
+  adjacentCounties <- read.csv("./appData/adjacent_counties.csv")
+
   
   ## Page 1 --------------------------------------------------------------------
   
   # Get file type and point id column name for the uploaded file.
   # Used for filtering, tables, and maps.
   fileMetaData <- reactiveVal()
+  
   observeEvent(input$speciesFile$datapath,{
     fileMetaData(identifyFileMetadata(input$speciesFile$datapath))
   })
@@ -107,19 +118,22 @@ server <- function(input, output, session) {
   # Run check on uploaded data
   checked_data <- reactive({
     req(input$speciesFile)
- 
+    
     chkdat <- switch(fileMetaData()$fileType,
                      rw = rw_check(speciesFile = input$speciesFile$datapath,
                                    plotLocations = "./appData/R&WAIM_2024_Plots_0.csv",
                                    counties = counties_gpkg,
-                                   plantDB = all_states_plant_db),
+                                   plantDB = all_states_plant_db,
+                                   adjCounties = adjacentCounties),
                      terrestrial = terr_check(speciesFile = input$speciesFile$datapath,
                                               counties = counties_gpkg,
-                                              plantDB = all_states_plant_db),
+                                              plantDB = all_states_plant_db,
+                                              adjCounties = adjacentCounties),
                      lotic = lotic_check(speciesFile = map_dfr(input$speciesFile$datapath, get_single_MIM_data),
                                          plotLocations = "./appData/lotic_aim_points_2021-2024.csv",
                                          counties = counties_gpkg,
-                                         plantDB = all_states_plant_db)
+                                         plantDB = all_states_plant_db,
+                                         adjCounties = adjacentCounties)
                      )
     
     chkdat

@@ -1,5 +1,5 @@
 # Check R&W data
-rw_check <- function(speciesFile, plotLocations, counties, plantDB){
+rw_check <- function(speciesFile, plotLocations, counties, plantDB, adjCounties){
   
   # Load species richness data---- 
   species_richness_dat_raw <- read.csv(speciesFile)
@@ -36,11 +36,40 @@ rw_check <- function(speciesFile, plotLocations, counties, plantDB){
                                         speciesCode == PLANT_code ~ TRUE)) %>%
     select(PlotID, # unique to RW
            speciesCode,
-           speciesCode,
            state = state.x,
            county = county.x,
            expectedInCounty)
-
+  
+  print("before")
+  print(speciesFinal)
+  
+  # Check if plant is found in adjacent counties
+  adjCountyCheck <- function(speciesCode, state, county, plantDBadj = plantDB,...) {
+    species <- speciesCode
+    st <- state
+    co <- county
+    neighbors <- adjCounties %>% filter(state == st, county == co)
+    adjcnty <- plantDBadj %>% rename(speciesCode = "PLANT_code") %>%
+      filter(state %in% neighbors$neighbor_state,
+             county %in% neighbors$neighbor_county,
+             speciesCode == species) %>%
+      pull(county) %>%
+      str_subset(pattern = county, negate = TRUE)
+    
+    if (length(adjcnty) == 0){
+      dat <- "None"
+    } else {
+      dat <- paste0(adjcnty, collapse = ", ")
+    }
+    
+    return(dat)
+  }
+  
+  speciesFinal$expectedInAdjacentCounty <- pmap(speciesFinal, adjCountyCheck) %>% unlist(use.names = FALSE)
+  
+  print("after")
+  print(speciesFinal)
+  
   return(speciesFinal)
 }
 
