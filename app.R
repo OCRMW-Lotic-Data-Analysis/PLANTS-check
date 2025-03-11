@@ -12,8 +12,8 @@ library(sf)
 library(readxl)
 library(shinyWidgets)
 library(markdown)
-library(here)
-shiny::addResourcePath(prefix = "www", directoryPath = here::here("www"))
+# To 
+#shiny::addResourcePath(prefix = "www", directoryPath = "./www")
 
 
 

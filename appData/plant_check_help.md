@@ -4,7 +4,7 @@ This app checks if AIM species richness data is regionally reasonable. A user ca
 
 Data file to upload: CSV of raw species richness survey data.
 
-[Data Example](www/sample_terrestrial.csv)
+[Data Example](sample_terrestrial.csv)
 
 Notes:
 
@@ -16,7 +16,7 @@ Notes:
 
 Data file to upload: CSV of raw species richness survey data.
 
-[Data Example](www/sample_rw.csv)
+[Data Example](sample_rw.csv)
 
 Notes:
 
@@ -28,7 +28,7 @@ Notes:
 
 Data file to upload: either Analysis or Data Entry MIM file
 
-[Data Example](www/NB-SS-1122_McCulloskyCreek_09JUN2024_ANALYSIS.xlsm)
+[Data Example](NB-SS-1122_McCulloskyCreek_09JUN2024_ANALYSIS.xlsm)
 
 Notes:
 
