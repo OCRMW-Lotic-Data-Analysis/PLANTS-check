@@ -14,7 +14,7 @@ hub <- read_csv(here("preprocessing/lotic/BLM_Natl_AIM_Lotic_Indicators_Hub_2025
          FieldOffice = str_to_title(FieldOffice))
 
 # Load and clean 2024 data
-pts <- read_csv(here("preprocessing/lotic/LoticAIM_2024_Points.csv")) %>%
+pts <- read_csv(here("preprocessing/lotic/LoticAIM_2024_2026_Points.csv")) %>%
   select(PointID,AdminState, District, FieldOffice, x, y) %>%
   mutate(District = str_to_title(District),
          FieldOffice = str_to_title(FieldOffice))
