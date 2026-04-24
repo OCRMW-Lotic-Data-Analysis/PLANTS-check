@@ -60,11 +60,11 @@ ui <-  page_navbar(
           "false",
           "False match only", TRUE
           ),
-        # Check box to filter out unknowns
-        checkboxInput(
-          "unk",
-          "Remove Unknowns", TRUE
-          ),
+        # # Check box to filter out unknowns
+        # checkboxInput(
+        #   "unk",
+        #   "Remove Unknowns", TRUE
+        #   ),
         # Filter tool to select one or more sites to observe
         pickerInput(inputId = "point_picker",
                     label = "Select point(s):",
@@ -180,13 +180,14 @@ server <- function(input, output, session) {
       filtered_data <- subset(filtered_data, expectedInCounty == 'FALSE')
     }
     
-    # Include Unknown plants or not
-    if (input$unk==TRUE) {
-      filtered_data <- subset(filtered_data,!grepl("[XXXX]", filtered_data$speciesCode))
-    }
-    
+    # # Include Unknown plants or not
+    # if (input$unk==TRUE) {
+    #   filtered_data <- subset(filtered_data,!grepl("[XXXX]", filtered_data$speciesCode))
+    # }
+
     filtered_data
   })
+    
   
   # Render table after accounting for filters
   output$checkTable <- renderReactable({
