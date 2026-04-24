@@ -11,7 +11,7 @@ options(tigris_use_cache = TRUE)
 options(digits = 15)
 
 ##Load all county level data from the PLANTS database and combine
-plant.data <- list.files(path = "C:/Users/matthew.trentman/OneDrive - The University of Montana/Documents/EMMA/MIM/RShiny for plant check/NV list",     
+plant.data <- list.files(path = "C:/Users/matthew.trentman/OneDrive - The University of Montana/Documents/EMMA/MIM/RShiny for plant check/ID list",     
                        pattern = "*.csv", 
                        full.names = TRUE) %>%  
   lapply(read_csv) %>%                                            
